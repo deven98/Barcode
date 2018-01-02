@@ -116,7 +116,12 @@ public abstract class Communication {
                 }
                 Log.d(TAG, "run: write begin");
                 IATEPacket packet = (IATEPacket) this.queue.poll();
-                byte[] poll = packet.getRaw();
+                byte[] poll = {};
+                try {
+                    poll = packet.getRaw();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 setWriteCallback(packet);
                 this.sendOk = false;
                 Log.d(TAG, "write =" + Utils.getHexString(poll, poll.length));
