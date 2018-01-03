@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         resultPendingIntent = PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this,"general")
-                .setContentText("Click Notification to open scanner")
+                .setContentText("Click Notification to open scanner. First click may initialise scanner, click again to start scanning.")
                 .setColorized(true)
                 .setOngoing(true)
                 .setContentIntent(resultPendingIntent)

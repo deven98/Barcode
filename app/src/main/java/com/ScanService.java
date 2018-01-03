@@ -1,13 +1,23 @@
 package com;
 
+import android.app.Instrumentation;
 import android.app.IntentService;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.FocusFinder;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import com.unistrong.barcode.MainActivity;
 import com.unistrong.luowei.communication.QRScanner;
@@ -30,7 +40,7 @@ public class ScanService extends IntentService {
         C02611() {
         }
 
-        public boolean result(boolean success, byte[] bytes, int length) {
+        public boolean result(boolean success, final byte[] bytes, final int length) {
 
             Log.d("barcode","result " + success);
 
@@ -38,10 +48,15 @@ public class ScanService extends IntentService {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("barcode", new String(bytes,0,length));
                 clipboard.setPrimaryClip(clip);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(),"Result: " + new String(bytes,0,length) + "\n Result Copied", Toast.LENGTH_LONG).show();
+                    }
+                });
+
             } else {
-                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("barcode", "Error");
-                clipboard.setPrimaryClip(clip);
+                //Write error code here
             }
             return true;
         }
@@ -50,12 +65,26 @@ public class ScanService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
 
-        qrScanner.connect();
+        if(qrScanner!=null){
+            qrScanner = new QRScanner();
+        }
 
-        Log.d("barcode","Scanner Connected " + qrScanner.isConnected());
+        if(qrScanner!=null) {
+            if (!qrScanner.isConnected()) {
+                qrScanner.connect();
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Initialising Scanner... \n Please click again in a short while to start scan.", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        }
 
-        qrScanner.startScan(new C02611());
-
+        if(qrScanner!=null) {
+            Log.d("barcode", "Scanner Connected " + qrScanner.isConnected());
+            qrScanner.startScan(new C02611());
+        }
     }
 
 }
